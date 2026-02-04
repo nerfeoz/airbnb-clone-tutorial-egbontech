@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏡 Full-Stack Airbnb Clone – Booking Platform
+<img width="1280" height="720" alt="airbnb-clone" src="https://github.com/user-attachments/assets/78f8179f-60b4-4b30-9c09-5ef84c6123d0" />
 
-## Getting Started
+A modern **full-stack Airbnb-style booking platform** built with **Next.js 16**, **Better Auth**, **Prisma**, and **PostgreSQL**.  
+Users can create listings, book trips, manage reservations, favorite listings, and filter results by category, location, and price.
 
-First, run the development server:
+This project is designed to reflect **real-world production patterns** and is ideal for learning or showcasing full-stack development skills.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+✔ User authentication (Email & Google OAuth)  
+✔ Create and manage property listings  
+✔ Image uploads using Cloudinary  
+✔ Booking system (reservations & trips)  
+✔ Prevent double bookings  
+✔ Favorite listings  
+✔ Filter by category, location, and price range  
+✔ Server Actions for data fetching  
+✔ Loading skeletons & empty states  
+✔ Fully responsive UI  
+✔ Deployed on Vercel  
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+### Frontend
+- Next.js 16 (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- Axios
+- React Date Range
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Backend
+- Next.js Server Actions
+- Prisma ORM
+- PostgreSQL
+- Better Auth
+- Cloudinary
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Deployment
+- Vercel
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📂 Project Structure
+
