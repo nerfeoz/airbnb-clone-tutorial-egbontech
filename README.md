@@ -45,7 +45,5 @@ This project is designed to reflect **real-world production patterns** and is id
 - Vercel
 
 
----
 
-## 📂 Project Structure
 
