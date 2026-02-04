@@ -44,6 +44,12 @@ This project is designed to reflect **real-world production patterns** and is id
 ### Deployment
 - Vercel
 
+---
+
+## 🎥 Tutorial  
+Watch the full tutorial on YouTube here:  
+👉 [YouTube Tutorial](https://youtu.be/9FWmNSKzN5w)  
+
 
 
 
