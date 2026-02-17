@@ -1,4 +1,7 @@
-import prisma from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+
+import { users } from "@/db/schema";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "@/server-actions/getCurrentUser";
 import { NextResponse } from "next/server";
 
@@ -22,14 +25,24 @@ export async function POST(
       );
     }
 
-    const user = await prisma.user.update({
-      where: { id: currentUser.id },
-      data: {
-        favoriteIds: {
-          push: listingId,
-        },
-      },
+    const existing = await db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
+      columns: { favoriteIds: true },
     });
+
+    if (!existing) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const updatedFavoriteIds = Array.from(
+      new Set([...existing.favoriteIds, listingId]),
+    );
+
+    const [user] = await db
+      .update(users)
+      .set({ favoriteIds: updatedFavoriteIds, updatedAt: new Date() })
+      .where(eq(users.id, currentUser.id))
+      .returning();
 
     return NextResponse.json(user);
   } catch (error) {
@@ -61,8 +74,8 @@ export async function DELETE(
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: currentUser.id },
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
     });
 
     if (!user) {
@@ -73,12 +86,11 @@ export async function DELETE(
       (id: string) => id !== listingId,
     );
 
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        favoriteIds: updatedFavoriteIds,
-      },
-    });
+    const [updatedUser] = await db
+      .update(users)
+      .set({ favoriteIds: updatedFavoriteIds, updatedAt: new Date() })
+      .where(eq(users.id, user.id))
+      .returning();
 
     return NextResponse.json(updatedUser);
   } catch (error) {

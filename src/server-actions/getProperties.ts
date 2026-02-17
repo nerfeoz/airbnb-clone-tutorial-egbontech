@@ -1,4 +1,7 @@
-import prisma from "@/lib/prisma";
+import { desc, eq } from "drizzle-orm";
+
+import { listings } from "@/db/schema";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "./getCurrentUser";
 
 export async function getProperties() {
@@ -8,14 +11,10 @@ export async function getProperties() {
     return [];
   }
 
-  const listings = await prisma.listing.findMany({
-    where: {
-      userId: currentUser.id,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
+  const userListings = await db.query.listings.findMany({
+    where: eq(listings.userId, currentUser.id),
+    orderBy: [desc(listings.createdAt)],
   });
 
-  return listings;
+  return userListings;
 }

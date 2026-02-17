@@ -1,6 +1,10 @@
-import prisma from "@/lib/prisma";
+import { and, eq, gte, lte } from "drizzle-orm";
+
+import { listings, reservations } from "@/db/schema";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "@/server-actions/getCurrentUser";
 import { NextResponse } from "next/server";
+import cuid from "cuid";
 
 export async function POST(req: Request) {
   try {
@@ -18,8 +22,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const listing = await prisma.listing.findUnique({
-      where: { id: listingId },
+    const listing = await db.query.listings.findFirst({
+      where: eq(listings.id, listingId),
     });
 
     if (!listing) {
@@ -34,14 +38,12 @@ export async function POST(req: Request) {
     }
 
     //check for overlapping reservations
-    const existingReservation = await prisma.reservation.findFirst({
-      where: {
-        listingId,
-        AND: [
-          { startDate: { lte: new Date(endDate) } },
-          { endDate: { gte: new Date(startDate) } },
-        ],
-      },
+    const existingReservation = await db.query.reservations.findFirst({
+      where: and(
+        eq(reservations.listingId, listingId),
+        lte(reservations.startDate, new Date(endDate)),
+        gte(reservations.endDate, new Date(startDate)),
+      ),
     });
 
     if (existingReservation) {
@@ -52,15 +54,17 @@ export async function POST(req: Request) {
     }
 
     //create reservation
-    const reservation = await prisma.reservation.create({
-      data: {
+    const [reservation] = await db
+      .insert(reservations)
+      .values({
+        id: cuid(),
         userId: currentUser.id,
         listingId,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         totalPrice,
-      },
-    });
+      })
+      .returning();
 
     return NextResponse.json(reservation, { status: 201 });
   } catch (error) {

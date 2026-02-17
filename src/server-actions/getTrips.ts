@@ -1,4 +1,7 @@
-import prisma from "@/lib/prisma";
+import { desc, eq } from "drizzle-orm";
+
+import { listings, reservations } from "@/db/schema";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "./getCurrentUser";
 
 export async function getTrips() {
@@ -8,26 +11,24 @@ export async function getTrips() {
     return [];
   }
 
-  const trips = await prisma.reservation.findMany({
-    where: {
-      userId: currentUser.id,
-    },
-    orderBy: {
-      startDate: "desc",
-    },
-    include: {
-      listing: true,
-    },
-  });
+  const rows = await db
+    .select({
+      reservation: reservations,
+      listing: listings,
+    })
+    .from(reservations)
+    .innerJoin(listings, eq(reservations.listingId, listings.id))
+    .where(eq(reservations.userId, currentUser.id))
+    .orderBy(desc(reservations.startDate));
 
-  return trips.map((trip) => ({
-    ...trip,
-    startDate: trip.startDate.toISOString(),
-    endDate: trip.endDate.toISOString(),
-    createdAt: trip.createdAt.toISOString(),
+  return rows.map((row) => ({
+    ...row.reservation,
+    startDate: row.reservation.startDate.toISOString(),
+    endDate: row.reservation.endDate.toISOString(),
+    createdAt: row.reservation.createdAt.toISOString(),
     listing: {
-      ...trip.listing,
-      createdAt: trip.listing.createdAt.toISOString(),
+      ...row.listing,
+      createdAt: row.listing.createdAt.toISOString(),
     },
   }));
 }

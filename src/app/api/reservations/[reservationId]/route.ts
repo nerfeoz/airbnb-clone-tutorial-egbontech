@@ -1,4 +1,7 @@
-import prisma from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+
+import { listings, reservations } from "@/db/schema";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "@/server-actions/getCurrentUser";
 import { NextResponse } from "next/server";
 
@@ -21,16 +24,17 @@ export async function DELETE(
     );
   }
 
-  const reservation = await prisma.reservation.findUnique({
-    where: { id: reservationId },
-    include: {
-      listing: {
-        select: {
-          userId: true,
-        },
-      },
-    },
-  });
+  const rows = await db
+    .select({
+      reservation: reservations,
+      listing: listings,
+    })
+    .from(reservations)
+    .innerJoin(listings, eq(reservations.listingId, listings.id))
+    .where(eq(reservations.id, reservationId))
+    .limit(1);
+
+  const reservation = rows[0];
 
   if (!reservation) {
     return NextResponse.json(
@@ -40,16 +44,14 @@ export async function DELETE(
   }
 
   //check for ownership
-  const isGuest = reservation.userId === currentUser.id;
+  const isGuest = reservation.reservation.userId === currentUser.id;
   const isHost = reservation.listing.userId === currentUser.id;
 
   if (!isGuest && !isHost) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
 
-  await prisma.reservation.delete({
-    where: { id: reservationId },
-  });
+  await db.delete(reservations).where(eq(reservations.id, reservationId));
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

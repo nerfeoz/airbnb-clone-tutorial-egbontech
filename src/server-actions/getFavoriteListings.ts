@@ -1,4 +1,7 @@
-import prisma from "@/lib/prisma";
+import { desc, eq, inArray } from "drizzle-orm";
+
+import { listings, users } from "@/db/schema";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "./getCurrentUser";
 
 export async function getFavoriteListings() {
@@ -8,9 +11,9 @@ export async function getFavoriteListings() {
     return [];
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: currentUser.id },
-    select: {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, currentUser.id),
+    columns: {
       favoriteIds: true,
     },
   });
@@ -20,16 +23,11 @@ export async function getFavoriteListings() {
   }
 
   //fetch the listings in the user favorite Ids
-  const listings = await prisma.listing.findMany({
-    where: {
-      id: {
-        in: user.favoriteIds,
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const favoriteListings = await db
+    .select()
+    .from(listings)
+    .where(inArray(listings.id, user.favoriteIds))
+    .orderBy(desc(listings.createdAt));
 
-  return listings;
+  return favoriteListings;
 }

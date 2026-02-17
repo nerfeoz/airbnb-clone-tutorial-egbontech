@@ -1,10 +1,14 @@
-import prisma from "@/lib/prisma";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
+
+import { listings } from "@/db/schema";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "@/server-actions/getCurrentUser";
 import {
   CloudinaryUploadResult,
   uploadToCloudinary,
 } from "@/services/cloudinary";
 import { NextResponse } from "next/server";
+import cuid from "cuid";
 
 export async function POST(req: Request) {
   try {
@@ -42,8 +46,10 @@ export async function POST(req: Request) {
     //upload the image to cloudinary
     const imageData: CloudinaryUploadResult = await uploadToCloudinary(image);
 
-    const listing = await prisma.listing.create({
-      data: {
+    const [listing] = await db
+      .insert(listings)
+      .values({
+        id: cuid(),
         title,
         description,
         price: Number(price),
@@ -54,8 +60,8 @@ export async function POST(req: Request) {
         roomCount: Number(roomCount),
         guestCount: Number(guestCount),
         bathroomCount: Number(bathroomCount),
-      },
-    });
+      })
+      .returning();
 
     return NextResponse.json(listing, { status: 201 });
   } catch (error) {
@@ -76,25 +82,22 @@ export async function GET(req: Request) {
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
 
-    const listings = await prisma.listing.findMany({
-      where: {
-        ...(category && { category }),
-        ...(locationValue && { locationValue }),
-        ...(minPrice || maxPrice
-          ? {
-              price: {
-                ...(minPrice ? { gte: Number(minPrice) } : {}),
-                ...(maxPrice ? { lte: Number(maxPrice) } : {}),
-              },
-            }
-          : {}),
-      },
-      orderBy:{
-        createdAt:"desc"
-      }
-    });
+    const conditions = [];
 
-    return NextResponse.json(listings);
+    if (category) conditions.push(eq(listings.category, category));
+    if (locationValue)
+      conditions.push(eq(listings.locationValue, locationValue));
+    if (minPrice) conditions.push(gte(listings.price, Number(minPrice)));
+    if (maxPrice) conditions.push(lte(listings.price, Number(maxPrice)));
+
+    const query = db.select().from(listings);
+
+    const listingsResult =
+      conditions.length > 0
+        ? query.where(and(...conditions)).orderBy(desc(listings.createdAt))
+        : query.orderBy(desc(listings.createdAt));
+
+    return NextResponse.json(await listingsResult);
   } catch (error) {
     console.error("[LISTINGS_GET]", error);
     return NextResponse.json(

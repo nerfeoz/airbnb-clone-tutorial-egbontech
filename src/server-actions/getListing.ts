@@ -1,20 +1,21 @@
-import prisma from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+
+import { listings } from "@/db/schema";
+import { db } from "@/lib/db";
 
 export async function getListing(listingId: string) {
   try {
-    const listing = await prisma.listing.findUnique({
-      where: {
-        id: listingId,
-      },
-      include: {
+    const listing = await db.query.listings.findFirst({
+      where: eq(listings.id, listingId),
+      with: {
         reservations: {
-          select: {
+          columns: {
             startDate: true,
             endDate: true,
           },
         },
         user: {
-          select: {
+          columns: {
             id: true,
             name: true,
             image: true,
